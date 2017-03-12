@@ -1,7 +1,7 @@
 
 Pod::Spec.new do |s|
   s.name             = "LCYOptionBar"
-  s.version          = "0.0.1"
+  s.version          = "0.0.2"
   s.summary          = "一个选项栏"
 
   s.description      = <<-DESC
@@ -12,7 +12,7 @@ Pod::Spec.new do |s|
   # s.screenshots     = "www.example.com/screenshots_1", "www.example.com/screenshots_2"
   s.license          = 'MIT'
   s.author           = {  "LCY" => "1664880373@qq.com" }
-  s.source           = { :git => "https://github.com/19940524/LCYOptionBar.git", :tag => "0.0.1" }
+  s.source           = { :git => "https://github.com/19940524/LCYOptionBar.git", :tag => "0.0.2" }
  
 
   s.ios.deployment_target = '8.0'

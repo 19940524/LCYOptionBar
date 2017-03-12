@@ -18,6 +18,15 @@
 
 @implementation CYDrawBoard
 
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        self.lineColor = [UIColor whiteColor];
+    }
+    return self;
+}
+
 -(UIBezierPath *)bezierPath {
     if (!_bezierPath) {
         _bezierPath = [UIBezierPath bezierPath];
@@ -42,7 +51,7 @@
         }
     }
     
-    [[UIColor whiteColor] set];
+    [self.lineColor set];
     [self.bezierPath stroke];
 }
 

@@ -9,31 +9,6 @@
 #import "CYOptionBar.h"
 #import "CYDrawBoard.h"
 
-
-@implementation UIView (CYAdd)
-
-- (CGFloat)left {
-    return self.frame.origin.x;
-}
-
-- (CGFloat)right {
-    return self.frame.origin.x + self.frame.size.width;
-}
-
-- (CGFloat)width {
-    return self.frame.size.width;
-}
-
-- (CGFloat)height {
-    return self.frame.size.height;
-}
-
-- (CGFloat)centerX {
-    return self.center.x;
-}
-
-@end
-
 #define kFont 16
 #define kMaxWeight 1
 #define kDefaultAlpha 0.6
@@ -44,7 +19,6 @@
 @interface CYOptionBar () <UIScrollViewDelegate> {
     CGFloat _lineY;
     UIButton *_seleteButton;
-    dispatch_queue_t _calculPointQueue;
     BOOL _scrollViewAlreadyLayout;
     
 }
@@ -52,6 +26,8 @@
 @property (nonatomic, strong) CYDrawBoard *bgView;
 
 @property (nonatomic, copy) MainTopBlock block;
+
+@property (nonatomic, assign) LineType lineType;
 
 @property (nonatomic, strong) NSMutableArray *buttons;
 
@@ -69,13 +45,17 @@
     return _buttons;
 }
 
--(void)setLineType:(LineType)lineType {
-    _lineType = lineType;
-    if (lineType == LineType_arrow) {
-        _lineY = self.height - kLineLengthHalf - 1;
-    } else {
-        _lineY = 35;
+-(void)setTitleColor:(UIColor *)titleColor {
+    _titleColor = titleColor;
+    if (!self.bgView) {
+        return;
     }
+    self.bgView.lineColor = titleColor;
+    for (UIButton *button in _buttons) {
+        [button setTitleColor:[_titleColor colorWithAlphaComponent:kDefaultAlpha] forState:UIControlStateNormal];
+    }
+    
+    [self refreshLine:_selectedIndex];
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -92,74 +72,9 @@
         [self.targetScrollView layoutIfNeeded];
         self.targetScrollView.delegate = self;
         self.backgroundColor = [UIColor clearColor];
-        _calculPointQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);;
         [self __initUI:titles];
     }
     return self;
-}
-
-static CGFloat lastOffsetX = 0;
-- (void)__premiereText:(UIScrollView *)scrollView {
-    
-    CGFloat offsetX = scrollView.contentOffset.x;
-    
-    BOOL toLeft = YES;
-    
-    if (offsetX > lastOffsetX) {
-        toLeft = NO;
-    }
-    
-    [self __premiereText:offsetX / scrollView.width toLeft:toLeft];
-    
-    lastOffsetX = offsetX;
-}
-
-- (void)refreshLine:(NSInteger)tag {
-    
-    [self __refreshLine:tag animated:NO];
-    [self scrollViewDidEndScrollingAnimation:self.targetScrollView];
-}
-
-- (void)__refreshLine:(NSInteger)tag animated:(BOOL)animated {
-    UIButton *button = self.buttons[tag];
-    CGFloat mp = button.centerX - kLineLengthHalf;
-    
-    NSMutableArray *points = [NSMutableArray array];
-    
-    CGPoint movePath = CGPointMake(mp, _lineY);
-    CGPoint toPath = CGPointMake(movePath.x+kLineLength, movePath.y);
-    
-    [points addObject:[NSValue valueWithCGPoint:movePath]];
-    if (self.lineType == LineType_arrow) {
-        CGPoint zj = CGPointMake(movePath.x + kLineLengthHalf, _lineY + kLineLengthHalf);
-        [points addObject:[NSValue valueWithCGPoint:zj]];
-    }
-    [points addObject:[NSValue valueWithCGPoint:toPath]];
-    
-    dispatch_sync(dispatch_get_main_queue(), ^{
-        [self.bgView drawLine:[points copy]];
-        
-        if (animated) {
-            CGPoint point = CGPointMake(button.tag * self.targetScrollView.width ,self.targetScrollView.contentOffset.y);
-            [UIView animateWithDuration:0.16 animations:^{
-                [self.targetScrollView setContentOffset:point animated:NO];
-            } completion:nil];
-        } else {
-            self.targetScrollView.contentOffset = CGPointMake(tag * self.targetScrollView.width, 0);
-        }
-    });
-    
-}
-
-- (void)titleClick:(UIButton *)button {
-    
-    if (self.block) {
-        self.block(button.tag);
-    }
-    
-    [self __scrollToIndex:button.tag];
-    
-    [self __refreshLine:button.tag animated:YES];
 }
 
 - (void)__initUI:(NSArray *)titles {
@@ -168,7 +83,7 @@ static CGFloat lastOffsetX = 0;
     self.showsVerticalScrollIndicator = NO;
     self.showsHorizontalScrollIndicator = NO;
     
-    CGFloat btnH = self.height;
+    CGFloat btnH = self.frame.size.height;
     CGFloat btnX = 0;
     
     CGFloat contentW = 0.0;
@@ -187,24 +102,97 @@ static CGFloat lastOffsetX = 0;
         [titleButton setTitleColor:[self.titleColor colorWithAlphaComponent:kDefaultAlpha] forState:UIControlStateNormal];
         titleButton.titleLabel.font = [UIFont systemFontOfSize:kFont weight:0];
         [titleButton sizeToFit];
-        titleButton.frame = CGRectMake(btnX, 0, titleButton.width+20, btnH);
+        if (i == 0) {
+            if (_lineType == LineType_arrow) {
+                _lineY = self.frame.size.height - kLineLengthHalf - 1;
+            } else {
+                _lineY = (self.frame.size.height - titleButton.frame.size.height) / 2 + titleButton.frame.size.height;
+            }
+        }
+        titleButton.frame = CGRectMake(btnX, 0, titleButton.frame.size.width+20, btnH);
         [titleButton addTarget:self action:@selector(titleClick:) forControlEvents:UIControlEventTouchUpInside];
         [self addSubview:titleButton];
         
-        btnX += titleButton.width;
-        contentW = titleButton.right;
+        btnX += titleButton.frame.size.width;
+        contentW = titleButton.frame.origin.x + titleButton.frame.size.width;
     }
     
     UIButton *button = self.buttons[self.buttons.count-1];
-    self.bgView = [[CYDrawBoard alloc] initWithFrame:CGRectMake(0, 0, button.right, self.height)];
+    self.bgView = [[CYDrawBoard alloc] initWithFrame:CGRectMake(0, 0, button.frame.origin.x + button.frame.size.width, self.frame.size.height)];
     self.bgView.backgroundColor = [UIColor clearColor];
     [self addSubview:self.bgView];
     [self sendSubviewToBack:self.bgView];
     
-    self.contentSize = CGSizeMake(contentW, self.height);
+    self.contentSize = CGSizeMake(contentW, self.frame.size.height);
     
     [self refreshLine:0];
 }
+
+static CGFloat lastOffsetX = 0;
+- (void)__premiereText:(UIScrollView *)scrollView {
+    
+    CGFloat offsetX = scrollView.contentOffset.x;
+    
+    BOOL toLeft = YES;
+    
+    if (offsetX > lastOffsetX) {
+        toLeft = NO;
+    }
+    
+    [self __premiereText:offsetX / scrollView.frame.size.width toLeft:toLeft];
+    
+    lastOffsetX = offsetX;
+}
+
+- (void)refreshLine:(NSInteger)tag {
+    
+    [self __refreshLine:tag animated:NO];
+    [self scrollViewDidEndScrollingAnimation:self.targetScrollView];
+}
+
+- (void)__refreshLine:(NSInteger)tag animated:(BOOL)animated {
+    UIButton *button = self.buttons[tag];
+    CGFloat mp = button.center.x - kLineLengthHalf;
+    
+    NSMutableArray *points = [NSMutableArray array];
+    
+    CGPoint movePath = CGPointMake(mp, _lineY);
+    CGPoint toPath = CGPointMake(movePath.x+kLineLength, movePath.y);
+    
+    [points addObject:[NSValue valueWithCGPoint:movePath]];
+    if (self.lineType == LineType_arrow) {
+        CGPoint zj = CGPointMake(movePath.x + kLineLengthHalf, _lineY + kLineLengthHalf);
+        [points addObject:[NSValue valueWithCGPoint:zj]];
+    }
+    [points addObject:[NSValue valueWithCGPoint:toPath]];
+    
+    [self.bgView drawLine:[points copy]];
+    
+    if (animated) {
+        CGPoint point = CGPointMake(button.tag * self.targetScrollView.frame.size.width ,self.targetScrollView.contentOffset.y);
+        [UIView animateWithDuration:0.16 animations:^{
+            [self.targetScrollView setContentOffset:point animated:NO];
+        } completion:nil];
+    } else {
+        self.targetScrollView.contentOffset = CGPointMake(tag * self.targetScrollView.frame.size.width, 0);
+    }
+}
+
+- (void)titleClick:(UIButton *)button {
+    
+    if (self.block) {
+        self.block(button.tag);
+    }
+    
+    for (UIButton *button in _buttons) {
+        [button setTitleColor:[self.titleColor colorWithAlphaComponent:kDefaultAlpha] forState:UIControlStateNormal];
+    }
+    
+    [self __scrollToIndex:button.tag];
+    
+    [self __refreshLine:button.tag animated:YES];
+}
+
 
 - (void)__scrollToIndex:(NSInteger)index {
     _selectedIndex = index;
@@ -219,13 +207,13 @@ static CGFloat lastOffsetX = 0;
     _seleteButton = button;
     CGFloat x = 0;
     
-    if (button.right > self.width) {
-        x = button.right - self.width;
+    if (button.frame.origin.x + button.frame.size.width > self.frame.size.width) {
+        x = button.frame.origin.x + button.frame.size.width - self.frame.size.width;
         [self setContentOffset:CGPointMake(x, 0) animated:YES];
     }
     
-    if (button.left < self.contentOffset.x) {
-        x = button.left;
+    if (button.frame.origin.x < self.contentOffset.x) {
+        x = button.frame.origin.x;
         [self setContentOffset:CGPointMake(x, 0) animated:YES];
     }
 }
@@ -283,17 +271,16 @@ static CGFloat lastOffsetX = 0;
 }
 
 - (void)__setButtonLabelPremiere:(UIButton *)button alpha:(CGFloat)alpha weight:(CGFloat)weight {
-    dispatch_sync(dispatch_get_main_queue(), ^{
-        button.titleLabel.font = [UIFont systemFontOfSize:kFont weight:weight];
-        [button setTitleColor:[self.titleColor colorWithAlphaComponent:alpha] forState:UIControlStateNormal];
-    });
+    
+    button.titleLabel.font = [UIFont systemFontOfSize:kFont weight:weight];
+    [button setTitleColor:[self.titleColor colorWithAlphaComponent:alpha] forState:UIControlStateNormal];
 }
 
 #pragma mark - 计算直线点
 - (void)__scrollBGViewLine:(CGFloat)offsetX curBtn:(UIButton *)curBtn toBtn:(UIButton *)toBtn toLeft:(BOOL)toLeft {
     
-    CGFloat mp = curBtn.centerX - kLineLengthHalf;
-    CGFloat tp = toBtn.centerX - kLineLengthHalf;
+    CGFloat mp = curBtn.center.x - kLineLengthHalf;
+    CGFloat tp = toBtn.center.x - kLineLengthHalf;
     CGFloat x;
     if (toLeft) {
         CGFloat dist = mp - tp;
@@ -398,14 +385,14 @@ static CGFloat lastOffsetX = 0;
         [points addObject:[NSValue valueWithCGPoint:movePath]];
         [points addObject:[NSValue valueWithCGPoint:toPath]];
     }
-    dispatch_sync(dispatch_get_main_queue(), ^{
-        [self.bgView drawLine:[points copy]];
-    });
+    
+    [self.bgView drawLine:[points copy]];
+    
 }
 
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView {
     
-    CGFloat indexf = scrollView.contentOffset.x / scrollView.width;
+    CGFloat indexf = scrollView.contentOffset.x / scrollView.frame.size.width;
     int index = (int)indexf;
     if (index == indexf) {
         [self __scrollToIndex:index];
@@ -416,12 +403,9 @@ static CGFloat lastOffsetX = 0;
     [self scrollViewDidEndScrollingAnimation:scrollView];
 }
 
-
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     
-    dispatch_async(_calculPointQueue, ^{
-        [self __premiereText:scrollView];
-    });
+    [self __premiereText:scrollView];
 }
 
 

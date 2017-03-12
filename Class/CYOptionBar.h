@@ -8,14 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface UIView (CYAdd)
-@property (nonatomic,readonly) CGFloat left;
-@property (nonatomic,readonly) CGFloat right;
-@property (nonatomic,readonly) CGFloat width;
-@property (nonatomic,readonly) CGFloat height;
-@property (nonatomic,readonly) CGFloat centerX;
-@end
-
 typedef NS_ENUM(NSUInteger, LineType){
     LineType_line = 0,
     LineType_arrow = 1,
@@ -32,8 +24,6 @@ typedef void(^MainTopBlock)(NSInteger tag);
                       tapView:(MainTopBlock)block;
 
 @property (nonatomic, strong) UIColor *titleColor;
-
-@property (nonatomic, assign) LineType lineType;
 
 @property (nonatomic, readonly, assign) NSInteger selectedIndex;
 

@@ -12,4 +12,6 @@
 
 - (void)drawLine:(NSArray *)points;
 
+@property (nonatomic, strong) UIColor *lineColor;
+
 @end
