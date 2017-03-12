@@ -33,6 +33,8 @@
 
 @property (nonatomic, strong)  UIScrollView *targetScrollView;
 
+@property (nonatomic) dispatch_queue_t calculPoint;
+
 @end
 
 @implementation CYOptionBar
@@ -58,6 +60,13 @@
     [self refreshLine:_selectedIndex];
 }
 
+-(dispatch_queue_t)calculPoint {
+    if (!_calculPoint) {
+        _calculPoint = dispatch_queue_create("GuoBin.calculPoint", NULL);
+    }
+    return _calculPoint;
+}
+
 - (instancetype)initWithFrame:(CGRect)frame
                        titles:(NSArray *)titles
                      lineType:(LineType)lineType
@@ -67,12 +76,13 @@
     if (self = [super initWithFrame:frame]) {
         self.block = block;
         self.lineType = lineType;
-        self.titleColor = [UIColor whiteColor];
         self.targetScrollView = targetScrollView;
         [self.targetScrollView layoutIfNeeded];
         self.targetScrollView.delegate = self;
         self.backgroundColor = [UIColor clearColor];
+        
         [self __initUI:titles];
+        self.titleColor = [UIColor whiteColor];
     }
     return self;
 }
@@ -166,11 +176,14 @@ static CGFloat lastOffsetX = 0;
     }
     [points addObject:[NSValue valueWithCGPoint:toPath]];
     
-    [self.bgView drawLine:[points copy]];
+    __weak typeof(self) weakSelf = self;
+    [self goToMainThread:^{
+        [weakSelf.bgView drawLine:[points copy]];
+    }];
     
     if (animated) {
         CGPoint point = CGPointMake(button.tag * self.targetScrollView.frame.size.width ,self.targetScrollView.contentOffset.y);
-        [UIView animateWithDuration:0.16 animations:^{
+        [UIView animateWithDuration:0.18 animations:^{
             [self.targetScrollView setContentOffset:point animated:NO];
         } completion:nil];
     } else {
@@ -198,16 +211,19 @@ static CGFloat lastOffsetX = 0;
     _selectedIndex = index;
     
     UIButton *button = self.buttons[index];
+    __weak typeof(self) weakSelf = self;
+    [self goToMainThread:^{
+        [UIView animateWithDuration:0.16 animations:^{
+            [weakSelf __setButtonLabelPremiere:_seleteButton alpha:kDefaultAlpha weight:0];
+            [weakSelf __setButtonLabelPremiere:button alpha:1 weight:1];
+        } completion:nil];
+    }];
     
-    [UIView animateWithDuration:0.16 animations:^{
-        [self __setButtonLabelPremiere:_seleteButton alpha:kDefaultAlpha weight:0];
-        [self __setButtonLabelPremiere:button alpha:1 weight:1];
-    } completion:nil];
     
     _seleteButton = button;
     CGFloat x = 0;
     
-    if (button.frame.origin.x + button.frame.size.width > self.frame.size.width) {
+    if (button.frame.origin.x + button.frame.size.width > self.contentOffset.x + self.frame.size.width) {
         x = button.frame.origin.x + button.frame.size.width - self.frame.size.width;
         [self setContentOffset:CGPointMake(x, 0) animated:YES];
     }
@@ -266,22 +282,25 @@ static CGFloat lastOffsetX = 0;
     [self __setButtonLabelPremiere:currentButton alpha:currentAlpha weight:currentWeight];
     [self __setButtonLabelPremiere:toButton alpha:toAlpha weight:toWeight];
     
-    [self __scrollBGViewLine:offsetX curBtn:currentButton toBtn:toButton toLeft:toLeft];
+    [self __scrollLine:offsetX curBtn:currentButton toBtn:toButton toLeft:toLeft];
     
 }
 
 - (void)__setButtonLabelPremiere:(UIButton *)button alpha:(CGFloat)alpha weight:(CGFloat)weight {
-    
-    button.titleLabel.font = [UIFont systemFontOfSize:kFont weight:weight];
-    [button setTitleColor:[self.titleColor colorWithAlphaComponent:alpha] forState:UIControlStateNormal];
+    __weak typeof(self) weakSelf = self;
+    [self goToMainThread:^{
+        button.titleLabel.font = [UIFont systemFontOfSize:kFont weight:weight];
+        [button setTitleColor:[weakSelf.titleColor colorWithAlphaComponent:alpha] forState:UIControlStateNormal];
+    }];
 }
 
 #pragma mark - 计算直线点
-- (void)__scrollBGViewLine:(CGFloat)offsetX curBtn:(UIButton *)curBtn toBtn:(UIButton *)toBtn toLeft:(BOOL)toLeft {
+- (void)__scrollLine:(CGFloat)offsetX curBtn:(UIButton *)curBtn toBtn:(UIButton *)toBtn toLeft:(BOOL)toLeft {
     
     CGFloat mp = curBtn.center.x - kLineLengthHalf;
     CGFloat tp = toBtn.center.x - kLineLengthHalf;
     CGFloat x;
+    
     if (toLeft) {
         CGFloat dist = mp - tp;
         x = mp - (dist - ((offsetX - (int)offsetX) * dist));
@@ -386,8 +405,10 @@ static CGFloat lastOffsetX = 0;
         [points addObject:[NSValue valueWithCGPoint:toPath]];
     }
     
-    [self.bgView drawLine:[points copy]];
-    
+    __weak typeof(self) weakSelf = self;
+    [self goToMainThread:^{
+        [weakSelf.bgView drawLine:[points copy]];
+    }];
 }
 
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView {
@@ -404,10 +425,24 @@ static CGFloat lastOffsetX = 0;
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    
-    [self __premiereText:scrollView];
+    dispatch_async(self.calculPoint, ^{
+        [self __premiereText:scrollView];
+    });
 }
 
+- (void)goToMainThread:(void(^)())block {
+    if ([NSThread isMainThread]) {
+        if (block) {
+            block();
+        }
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            if (block) {
+                block();
+            }
+        });
+    }
+}
 
 
 @end
