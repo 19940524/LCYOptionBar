@@ -33,7 +33,7 @@
     
     CYOptionBar *topView = [[CYOptionBar alloc] initWithFrame:CGRectMake(0, 0, 250, 40)
                                                        titles:titleNames
-                                                     lineType:0
+                                                     lineType:LineType_line
                                                    scrollView:_scrollView
                                                       tapView:nil];
     self.navigationItem.titleView = topView;
