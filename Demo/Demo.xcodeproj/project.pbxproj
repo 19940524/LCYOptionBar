@@ -18,7 +18,7 @@
 		A655E9771E742E010025E558 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A655E9751E742E010025E558 /* LaunchScreen.storyboard */; };
 		A655E9821E742E020025E558 /* DemoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A655E9811E742E020025E558 /* DemoTests.m */; };
 		A655E98D1E742E020025E558 /* DemoUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = A655E98C1E742E020025E558 /* DemoUITests.m */; };
-		A66E58FA1E752B3D00A5F081 /* designSketch.gifcask in Resources */ = {isa = PBXBuildFile; fileRef = A66E58F91E752B3D00A5F081 /* designSketch.gifcask */; };
+		A67B090C1E767608007D49DF /* ds.gif in Resources */ = {isa = PBXBuildFile; fileRef = A67B090B1E767608007D49DF /* ds.gif */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -60,7 +60,7 @@
 		A655E9881E742E020025E558 /* DemoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A655E98C1E742E020025E558 /* DemoUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DemoUITests.m; sourceTree = "<group>"; };
 		A655E98E1E742E020025E558 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A66E58F91E752B3D00A5F081 /* designSketch.gifcask */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = designSketch.gifcask; sourceTree = "<group>"; };
+		A67B090B1E767608007D49DF /* ds.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = ds.gif; sourceTree = "<group>"; };
 		B153F775F643A785819AA0C7 /* libPods-DemoUITests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-DemoUITests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B16E9D2EE12160E1E3ED1335 /* Pods-Demo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Demo.release.xcconfig"; path = "Pods/Target Support Files/Pods-Demo/Pods-Demo.release.xcconfig"; sourceTree = "<group>"; };
 		C735A4A9FFFE4684B482D72F /* Pods-DemoUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DemoUITests.release.xcconfig"; path = "Pods/Target Support Files/Pods-DemoUITests/Pods-DemoUITests.release.xcconfig"; sourceTree = "<group>"; };
@@ -136,7 +136,7 @@
 		A655E9671E742E010025E558 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				A66E58F91E752B3D00A5F081 /* designSketch.gifcask */,
+				A67B090B1E767608007D49DF /* ds.gif */,
 				A655E9681E742E010025E558 /* main.m */,
 			);
 			name = "Supporting Files";
@@ -301,8 +301,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				A655E9771E742E010025E558 /* LaunchScreen.storyboard in Resources */,
+				A67B090C1E767608007D49DF /* ds.gif in Resources */,
 				A655E9741E742E010025E558 /* Assets.xcassets in Resources */,
-				A66E58FA1E752B3D00A5F081 /* designSketch.gifcask in Resources */,
 				A655E9721E742E010025E558 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
