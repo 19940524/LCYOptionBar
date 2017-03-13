@@ -37,6 +37,7 @@
                                                    scrollView:_scrollView
                                                       tapView:nil];
     self.navigationItem.titleView = topView;
+    [topView refreshLine:1];
     
     CGFloat width = kSCREEN_WIDTH;
     CGFloat height = kSCREEN_HEIGHT;
