@@ -1,3 +1,3 @@
 # LCYOptionBar
 一个简单选项卡
-![image](http://github.com/19940524/LCYOptionBar/raw/master/Demo/designSketch.gifcask )   
+![gif](http://github.com/19940524/LCYOptionBar/blob/master/Demo/ds.gif )  
