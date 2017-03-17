@@ -33,8 +33,6 @@
 
 @property (nonatomic, strong)  UIScrollView *targetScrollView;
 
-@property (nonatomic) dispatch_queue_t calculPoint;
-
 @end
 
 @implementation CYOptionBar
@@ -58,13 +56,6 @@
     }
     
     [self refreshLine:_selectedIndex];
-}
-
--(dispatch_queue_t)calculPoint {
-    if (!_calculPoint) {
-        _calculPoint = dispatch_queue_create("GuoBin.calculPoint", NULL);
-    }
-    return _calculPoint;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -157,10 +148,8 @@ static CGFloat lastOffsetX = 0;
 - (void)refreshLine:(NSInteger)tag {
     
     [self __refreshLine:tag animated:NO];
-    __weak typeof(self) weakSelf = self;
-    [self goToMainThread:^{
-        [weakSelf scrollViewDidEndScrollingAnimation:weakSelf.targetScrollView];
-    }];
+    
+    [self scrollViewDidEndScrollingAnimation:self.targetScrollView];
 }
 
 - (void)__refreshLine:(NSInteger)tag animated:(BOOL)animated {
@@ -179,21 +168,16 @@ static CGFloat lastOffsetX = 0;
     }
     [points addObject:[NSValue valueWithCGPoint:toPath]];
     
-    __weak typeof(self) weakSelf = self;
-    [self goToMainThread:^{
-        [weakSelf.bgView drawLine:[points copy]];
-    }];
+    [self.bgView drawLine:[points copy]];
     
-    [self goToMainThread:^{
-        if (animated) {
-            CGPoint point = CGPointMake(button.tag * self.targetScrollView.frame.size.width ,self.targetScrollView.contentOffset.y);
-            [UIView animateWithDuration:0.18 animations:^{
-                [self.targetScrollView setContentOffset:point animated:NO];
-            } completion:nil];
-        } else {
-            self.targetScrollView.contentOffset = CGPointMake(tag * self.targetScrollView.frame.size.width, 0);
-        }
-    }];
+    if (animated) {
+        CGPoint point = CGPointMake(button.tag * self.targetScrollView.frame.size.width ,self.targetScrollView.contentOffset.y);
+        [UIView animateWithDuration:0.18 animations:^{
+            [self.targetScrollView setContentOffset:point animated:NO];
+        } completion:nil];
+    } else {
+        self.targetScrollView.contentOffset = CGPointMake(tag * self.targetScrollView.frame.size.width, 0);
+    }
 }
 
 - (void)titleClick:(UIButton *)button {
@@ -217,13 +201,11 @@ static CGFloat lastOffsetX = 0;
     
     UIButton *button = self.buttons[index];
     __weak typeof(self) weakSelf = self;
-    [self goToMainThread:^{
-        [UIView animateWithDuration:0.16 animations:^{
-            [weakSelf __setButtonLabelPremiere:_seleteButton alpha:kDefaultAlpha weight:0];
-            [weakSelf __setButtonLabelPremiere:button alpha:1 weight:1];
-        } completion:nil];
-    }];
     
+    [UIView animateWithDuration:0.16 animations:^{
+        [weakSelf __setButtonLabelPremiere:_seleteButton alpha:kDefaultAlpha weight:0];
+        [weakSelf __setButtonLabelPremiere:button alpha:1 weight:1];
+    } completion:nil];
     
     _seleteButton = button;
     CGFloat x = 0;
@@ -293,10 +275,9 @@ static CGFloat lastOffsetX = 0;
 
 - (void)__setButtonLabelPremiere:(UIButton *)button alpha:(CGFloat)alpha weight:(CGFloat)weight {
     __weak typeof(self) weakSelf = self;
-    [self goToMainThread:^{
-        button.titleLabel.font = [UIFont systemFontOfSize:kFont weight:weight];
-        [button setTitleColor:[weakSelf.titleColor colorWithAlphaComponent:alpha] forState:UIControlStateNormal];
-    }];
+    
+    button.titleLabel.font = [UIFont systemFontOfSize:kFont weight:weight];
+    [button setTitleColor:[weakSelf.titleColor colorWithAlphaComponent:alpha] forState:UIControlStateNormal];
 }
 
 #pragma mark - 计算直线点
@@ -410,10 +391,7 @@ static CGFloat lastOffsetX = 0;
         [points addObject:[NSValue valueWithCGPoint:toPath]];
     }
     
-    __weak typeof(self) weakSelf = self;
-    [self goToMainThread:^{
-        [weakSelf.bgView drawLine:[points copy]];
-    }];
+    [self.bgView drawLine:[points copy]];
 }
 
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView {
@@ -439,23 +417,7 @@ static CGFloat lastOffsetX = 0;
         return;
     }
     
-    dispatch_async(self.calculPoint, ^{
-        [self __premiereText:scrollView];
-    });
-}
-
-- (void)goToMainThread:(void(^)())block {
-    if ([NSThread isMainThread]) {
-        if (block) {
-            block();
-        }
-    } else {
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            if (block) {
-                block();
-            }
-        });
-    }
+    [self __premiereText:scrollView];
 }
 
 
