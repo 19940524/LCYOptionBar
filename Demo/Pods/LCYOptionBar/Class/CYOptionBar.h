@@ -25,6 +25,8 @@ typedef void(^MainTopBlock)(NSInteger tag);
 
 @property (nonatomic, strong) UIColor *titleColor;
 
+@property (nonatomic, strong) UIFont *titleFont;
+
 @property (nonatomic, readonly, assign) NSInteger selectedIndex;
 
 - (void)refreshLine:(NSInteger)tag;

@@ -52,10 +52,17 @@
     }
     self.bgView.lineColor = titleColor;
     for (UIButton *button in _buttons) {
-        [button setTitleColor:[_titleColor colorWithAlphaComponent:kDefaultAlpha] forState:UIControlStateNormal];
+        [button setTitleColor:_titleColor forState:UIControlStateNormal];
+        button.alpha = kDefaultAlpha;
     }
     
     [self refreshLine:_selectedIndex];
+}
+-(void)setTitleFont:(UIFont *)titleFont {
+    _titleFont = titleFont;
+    for (UIButton *button in _buttons) {
+        button.titleLabel.font = titleFont;
+    }
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -100,8 +107,9 @@
         titleButton.tag = i;
         NSString *vcName = titles[i];
         [titleButton setTitle:vcName forState:UIControlStateNormal];
-        [titleButton setTitleColor:[self.titleColor colorWithAlphaComponent:kDefaultAlpha] forState:UIControlStateNormal];
-        titleButton.titleLabel.font = [UIFont systemFontOfSize:kFont weight:0];
+        [titleButton setTitleColor:self.titleColor forState:UIControlStateNormal];
+        titleButton.alpha = kDefaultAlpha;
+        titleButton.titleLabel.font = [UIFont systemFontOfSize:kFont];
         [titleButton sizeToFit];
         if (i == 0) {
             if (_lineType == LineType_arrow) {
@@ -187,7 +195,7 @@ static CGFloat lastOffsetX = 0;
     }
     
     for (UIButton *button in _buttons) {
-        [button setTitleColor:[self.titleColor colorWithAlphaComponent:kDefaultAlpha] forState:UIControlStateNormal];
+        button.alpha = kDefaultAlpha;
     }
     
     [self __scrollToIndex:button.tag];
@@ -202,10 +210,8 @@ static CGFloat lastOffsetX = 0;
     UIButton *button = self.buttons[index];
     __weak typeof(self) weakSelf = self;
     
-    [UIView animateWithDuration:0.16 animations:^{
-        [weakSelf __setButtonLabelPremiere:_seleteButton alpha:kDefaultAlpha weight:0];
-        [weakSelf __setButtonLabelPremiere:button alpha:1 weight:1];
-    } completion:nil];
+    [weakSelf __setButtonLabelPremiere:_seleteButton alpha:kDefaultAlpha weight:0];
+    [weakSelf __setButtonLabelPremiere:button alpha:1 weight:1];
     
     _seleteButton = button;
     CGFloat x = 0;
@@ -274,10 +280,9 @@ static CGFloat lastOffsetX = 0;
 }
 
 - (void)__setButtonLabelPremiere:(UIButton *)button alpha:(CGFloat)alpha weight:(CGFloat)weight {
-    __weak typeof(self) weakSelf = self;
     
-    button.titleLabel.font = [UIFont systemFontOfSize:kFont weight:weight];
-    [button setTitleColor:[weakSelf.titleColor colorWithAlphaComponent:alpha] forState:UIControlStateNormal];
+    button.transform = CGAffineTransformMakeScale(1+weight*0.07, 1+weight*0.07);
+    button.alpha = alpha;
 }
 
 #pragma mark - 计算直线点
